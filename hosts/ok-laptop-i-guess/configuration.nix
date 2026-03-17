@@ -50,6 +50,7 @@
 
   # Enable touchpad support (enabled default in most desktopManager).
   services.libinput.enable = true;
+  services.libinput.touchpad.naturalScrolling = true;
 
   users.users.${hostConfig.user}.packages = with pkgs; [
     kdePackages.kate
