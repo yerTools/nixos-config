@@ -2,6 +2,19 @@
 let
   dotfiles = "${config.home.homeDirectory}/nixos-config/config";
   createSymlink = path: config.lib.file.mkOutOfStoreSymlink path;
+  treeSitterCli = pkgs.rustPlatform.buildRustPackage {
+    pname = "tree-sitter";
+    version = "0.26.7";
+    src = pkgs.fetchCrate {
+      pname = "tree-sitter-cli";
+      version = "0.26.7";
+      hash = "sha256-JlF/cQgCWrTqvfZdIRwY15z1hQwiyiioqlGy9IyRQOw=";
+    };
+    cargoHash = "sha256-k0GvEiI5gbxkT6blzHflVmMc+2slR53CrktIGDMjlWw=";
+    nativeBuildInputs = with pkgs; [ pkg-config installShellFiles which rustPlatform.bindgenHook ];
+    buildInputs = with pkgs; [ openssl ];
+    doCheck = false;
+  };
   
   shellAliases = {
     rebuild = "sudo nixos-rebuild switch --flake ${config.home.homeDirectory}/nixos-config#${hostname}";
@@ -49,6 +62,7 @@ in
     ripgrep
     nodejs
     nil
+    rust-analyzer
 
     nano
     micro
@@ -57,14 +71,20 @@ in
 
     curl
     fd
-    tree-sitter
-    python3
-    lua
+    treeSitterCli
+    (python3.withPackages (ps: [ ps.pip ]))
+    lua5_1
     nerd-fonts.sauce-code-pro
     unzip
     luarocks
     yarn
     gzip
+    lsof
+    sqlite
+    ghostscript
+    tectonic
+    texliveSmall
+    mermaid-cli
 
     tmux
     tmuxp

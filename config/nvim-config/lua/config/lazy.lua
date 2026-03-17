@@ -97,3 +97,8 @@ require("lazy").setup({
     },
   },
 })
+
+local site_dir = vim.fn.stdpath("data") .. "/site/"
+if not vim.list_contains(vim.api.nvim_list_runtime_paths(), site_dir) then
+  vim.o.rtp = site_dir .. "," .. vim.o.rtp
+end
