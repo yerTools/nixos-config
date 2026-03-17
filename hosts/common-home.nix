@@ -13,6 +13,7 @@ let
   configLinks = {
     ".tmux.conf" = "tmux/tmux.conf";
     ".vim" = "vim";
+    ".config/nvim" = "nvim-config";
   };
 in
 {
@@ -52,6 +53,18 @@ in
     nano
     micro
     vim
+    neovim
+
+    curl
+    fd
+    tree-sitter
+    python3
+    lua
+    nerd-fonts.sauce-code-pro
+    unzip
+    luarocks
+    yarn
+    gzip
 
     tmux
     tmuxp
