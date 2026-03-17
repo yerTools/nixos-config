@@ -11,8 +11,8 @@ let
   };
 
   configLinks = {
-    ".config/tmux" = "tmux";
-    ".config/vim" = "vim";
+    ".tmux.conf" = "tmux/tmux.conf";
+    ".vim" = "vim";
   };
 in
 {
@@ -44,6 +44,11 @@ in
     fastfetch
     lazygit
     
+    fzf
+    ripgrep
+    nodejs
+    nil
+
     nano
     micro
     vim
