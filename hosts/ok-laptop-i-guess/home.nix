@@ -68,6 +68,8 @@ in
     configFile = {
       kdeglobals.General = {
         AccentColor = "255,0,0";
+        TerminalApplication = "kitty";
+        TerminalService = "kitty.desktop";
       };
       kdeglobals.KDE = {
         AnimationDurationFactor = 0.35355339059327373;
@@ -75,6 +77,22 @@ in
       plasmaparc.General = {
         RaiseMaximumVolume = true;
       };
+    };
+  };
+
+  xdg.mimeApps = {
+    enable = true;
+    defaultApplications = {
+      "text/html" = [ "zen-beta.desktop" "firefox.desktop" ];
+      "application/xhtml+xml" = [ "zen-beta.desktop" "firefox.desktop" ];
+      "application/pdf" = [ "zen-beta.desktop" "firefox.desktop" ];
+      "x-scheme-handler/http" = [ "zen-beta.desktop" "firefox.desktop" ];
+      "x-scheme-handler/https" = [ "zen-beta.desktop" "firefox.desktop" ];
+      "x-scheme-handler/about" = [ "zen-beta.desktop" "firefox.desktop" ];
+      "x-scheme-handler/unknown" = [ "zen-beta.desktop" "firefox.desktop" ];
+      "x-scheme-handler/mailto" = [ "thunderbird.desktop" ];
+      "message/rfc822" = [ "thunderbird.desktop" ];
+      "text/plain" = [ "code.desktop" ];
     };
   };
 
