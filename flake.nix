@@ -7,9 +7,10 @@
       url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    zen-browser.url = "github:0xc000022070/zen-browser-flake";
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }:
+  outputs = { self, nixpkgs, home-manager, ... }@inputs:
     let
       hosts = {
         "ok-laptop-i-guess" = {
@@ -21,7 +22,7 @@
     in {
       nixosConfigurations = builtins.mapAttrs (hostname: hostConfig: nixpkgs.lib.nixosSystem {
         system = hostConfig.system;
-        specialArgs = { inherit hostname hostConfig; };
+        specialArgs = { inherit hostname hostConfig inputs; };
         modules = [
           ./hosts/${hostname}/configuration.nix
           home-manager.nixosModules.home-manager
@@ -29,7 +30,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit hostname hostConfig; };
+              extraSpecialArgs = { inherit hostname hostConfig inputs; };
               users.${hostConfig.user} = import ./hosts/${hostname}/home.nix;
               backupFileExtension = "backup";
             };

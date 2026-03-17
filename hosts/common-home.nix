@@ -1,4 +1,4 @@
-{ config, pkgs, hostname, hostConfig, ... }:
+{ config, pkgs, hostname, hostConfig, inputs, ... }:
 let
   dotfiles = "${config.home.homeDirectory}/nixos-config/config";
   createSymlink = path: config.lib.file.mkOutOfStoreSymlink path;
@@ -72,5 +72,7 @@ in
     kitty-img
     pixcat
     meowpdf
+    
+    inputs.zen-browser.packages."${pkgs.system}".default
   ];
 }
