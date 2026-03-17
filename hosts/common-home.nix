@@ -42,11 +42,77 @@ in
   programs.starship = {
     enable = true;
     enableBashIntegration = true;
+    settings = {
+      add_newline = false;
+      command_timeout = 1200;
+
+      format = "$directory$git_branch$git_status$cmd_duration$line_break$character";
+
+      directory = {
+        truncation_length = 3;
+        truncation_symbol = ".../";
+        style = "bold cyan";
+      };
+
+      git_branch = {
+        format = " [$symbol$branch]($style)";
+        symbol = "git:";
+        style = "bold purple";
+      };
+
+      git_status = {
+        format = "([$all_status$ahead_behind]($style))";
+        style = "bold yellow";
+      };
+
+      cmd_duration = {
+        min_time = 1500;
+        format = " [$duration]($style)";
+        style = "bold 208";
+      };
+
+      character = {
+        success_symbol = "[>](bold green) ";
+        error_symbol = "[>](bold red) ";
+      };
+    };
   };
 
   programs.bash = {
     enable = true;
+    enableCompletion = true;
     inherit shellAliases;
+    initExtra = ''
+      # Tiny intro animation once per interactive shell, then clear it.
+      if [[ $- == *i* ]] && [[ -z "''${BASH_FANCY_INTRO_SHOWN:-}" ]]; then
+        export BASH_FANCY_INTRO_SHOWN=1
+        for frame in ".  " ".. " "..."; do
+          printf '\r\033[2mboot%s\033[0m' "$frame"
+          sleep 0.06
+        done
+        printf '\r\033[2K'
+      fi
+    '';
+  };
+
+  programs.atuin = {
+    enable = true;
+    enableBashIntegration = true;
+    settings = {
+      auto_sync = true;
+      update_check = false;
+      search_mode = "fuzzy";
+    };
+  };
+
+  programs.zoxide = {
+    enable = true;
+    enableBashIntegration = true;
+  };
+
+  programs.fzf = {
+    enable = true;
+    enableBashIntegration = true;
   };
 
   programs.kitty = {
