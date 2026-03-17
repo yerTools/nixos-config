@@ -39,6 +39,10 @@
 
   programs.firefox.enable = true;
   fonts.packages = with pkgs; [
+    noto-fonts
+    noto-fonts-color-emoji
+    nerd-fonts.sauce-code-pro
+    nerd-fonts.symbols-only
     nerd-fonts.jetbrains-mono
   ];
 

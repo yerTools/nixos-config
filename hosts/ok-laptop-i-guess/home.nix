@@ -70,6 +70,14 @@ in
         AccentColor = "255,0,0";
         TerminalApplication = "kitty";
         TerminalService = "kitty.desktop";
+        font = "Noto Sans,10,-1,5,50,0,0,0,0,0";
+        menuFont = "Noto Sans,10,-1,5,50,0,0,0,0,0";
+        toolBarFont = "Noto Sans,10,-1,5,50,0,0,0,0,0";
+        smallestReadableFont = "Noto Sans,8,-1,5,50,0,0,0,0,0";
+        fixed = "SauceCodePro Nerd Font,10,-1,5,50,0,0,0,0,0";
+      };
+      kdeglobals.WM = {
+        activeFont = "Noto Sans,10,-1,5,50,0,0,0,0,0";
       };
       kdeglobals.KDE = {
         AnimationDurationFactor = 0.35355339059327373;

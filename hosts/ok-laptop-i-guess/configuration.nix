@@ -34,7 +34,7 @@
   # Configure keymap in X11
   services.xserver.xkb = {
     layout = "de";
-    variant = "";
+    variant = "nodeadkeys";
   };
 
   services.printing.enable = true;
