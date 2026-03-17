@@ -176,6 +176,8 @@ in
     bat
     wget
     distrobox
+    distrobox-tui
+    distroshelf
     
     tree
     tealdeer
