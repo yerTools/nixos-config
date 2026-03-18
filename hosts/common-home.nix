@@ -173,6 +173,9 @@ in
 
   home.packages = with pkgs; [
     gcc
+    go
+    bun
+
     bat
     wget
     distrobox
@@ -205,6 +208,12 @@ in
     micro
     vim
     neovim
+
+    typst
+    typstyle
+    tinymist
+    ltex-ls-plus
+    websocat
 
     curl
     fd

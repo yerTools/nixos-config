@@ -17,7 +17,7 @@ return {
     },
     opts = {
       strategy = "terminal", -- oder "toggleterm", falls du das Plugin nutzt
-      templates = { "builtin" },
+      templates = { "builtin", "user.*" },
       task_list = { direction = "right", min_width = 40 },
     },
   },

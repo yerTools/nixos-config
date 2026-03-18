@@ -18,3 +18,18 @@ vim.keymap.set("n", "<M-s>", "<cmd>silent !tmux neww tmux-sessionizer -s 3<CR>")
 
 -- Visual mappings
 vim.keymap.set("v", "<leader>csl", ":sort<CR>", { desc = "Sort lines", silent = true })
+
+-- Typst mappings
+vim.keymap.set("n", "<leader>tc", function()
+	require("overseer").run_template({
+		name = "Typst Build/Watch",
+		params = { mode = "compile" },
+	})
+end, { desc = "Typst: Compile", silent = true })
+
+vim.keymap.set("n", "<leader>tw", function()
+	require("overseer").run_template({
+		name = "Typst Build/Watch",
+		params = { mode = "watch" },
+	})
+end, { desc = "Typst: Watch", silent = true })
