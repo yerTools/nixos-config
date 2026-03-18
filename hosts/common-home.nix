@@ -290,6 +290,15 @@ in
     gcc
     go
     bun
+    gopls
+    vtsls
+    lua-language-server
+    stylua
+    marksman
+    eslint_d
+    nodePackages.prettier
+    nodePackages.vscode-langservers-extracted
+    nodePackages.typescript
 
     bat
     wget

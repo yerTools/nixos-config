@@ -1,5 +1,3 @@
 return {
-  { import = "lazyvim.plugins.extras.lang.typescript" },
-  { import = "lazyvim.plugins.extras.linting.eslint" },
-  { import = "lazyvim.plugins.extras.lang.tailwind" },
+  -- Keep this file as a placeholder to avoid duplicate imports.
 }
