@@ -21,6 +21,11 @@ let
     update = "nix flake update --flake ${config.home.homeDirectory}/nixos-config";
     upgrade = "update && rebuild";
     neofetch = "fastfetch";
+    ls = "eza --icons --group-directories-first";
+    ll = "eza -lh --icons --git";
+    la = "eza -lah --icons --git";
+    lt = "eza --tree --level=2 --icons";
+    cat = "bat --style=plain";
   };
 
   configLinks = {
@@ -130,6 +135,15 @@ in
     enableCompletion = true;
     inherit shellAliases;
 
+    history = {
+      size = 50000;
+      save = 50000;
+      ignoreDups = true;
+      ignoreSpace = true;
+      expireDuplicatesFirst = true;
+      share = true;
+    };
+
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
 
@@ -139,7 +153,26 @@ in
       plugins = [ "git" "fzf" "zoxide" ];
     };
 
+    plugins = [
+      {
+        name = "zsh-autocomplete";
+        src = pkgs.zsh-autocomplete;
+        file = "share/zsh-autocomplete/zsh-autocomplete.plugin.zsh";
+      }
+    ];
+
     initContent = ''
+      # Completion stays fast and forgiving without changing core behavior.
+      zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+      zstyle ':completion:*' menu select
+
+      # Prefix-aware history search: type a prefix, then use arrow keys.
+      autoload -U up-line-or-beginning-search down-line-or-beginning-search
+      zle -N up-line-or-beginning-search
+      zle -N down-line-or-beginning-search
+      bindkey "^[[A" up-line-or-beginning-search
+      bindkey "^[[B" down-line-or-beginning-search
+
       # Starship renders the prompt; Oh My Zsh provides plugin ergonomics.
     '';
   };
@@ -154,10 +187,12 @@ in
   };
 
   programs.atuin = {
-    enable = false;
+    enable = true;
     enableBashIntegration = false;
+    enableZshIntegration = true;
+    flags = [ "--disable-up-arrow" ];
     settings = {
-      auto_sync = true;
+      auto_sync = false;
       update_check = false;
       search_mode = "fuzzy";
     };
@@ -170,6 +205,26 @@ in
   };
 
   programs.fzf = {
+    enable = true;
+    enableBashIntegration = true;
+    enableZshIntegration = true;
+    defaultCommand = "fd --type f --hidden --follow --exclude .git";
+    fileWidgetCommand = "fd --type f --hidden --follow --exclude .git";
+    changeDirWidgetCommand = "fd --type d --hidden --follow --exclude .git";
+    defaultOptions = [
+      "--height=45%"
+      "--layout=reverse"
+      "--border=rounded"
+      "--preview-window=right,60%,border-left"
+      "--bind=ctrl-/:toggle-preview"
+      "--color=fg:#b8bcb9,bg:#1f1515,hl:#d7b347,fg+:#fff4d8,bg+:#2b0f14,hl+:#ff4d4d,info:#8f2d35,prompt:#b92d1f,pointer:#ff4d4d,marker:#d7b347,spinner:#8f2d35,header:#b92d1f"
+    ];
+    fileWidgetOptions = [ "--preview 'bat --style=numbers --color=always --line-range :300 {}'" ];
+    changeDirWidgetOptions = [ "--preview 'eza --tree --level=2 --icons --color=always {} | head -200'" ];
+    historyWidgetOptions = [ "--sort" "--exact" ];
+  };
+
+  programs.carapace = {
     enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;
