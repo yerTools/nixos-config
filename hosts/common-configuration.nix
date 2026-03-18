@@ -32,6 +32,9 @@
     extraGroups = [ "networkmanager" "wheel" ];
   };
 
+  programs.zsh.enable = true;
+  users.defaultUserShell = pkgs.zsh;
+
   virtualisation.podman = {
     enable = true;
     dockerCompat = true;

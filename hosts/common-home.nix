@@ -42,40 +42,106 @@ in
   programs.starship = {
     enable = true;
     enableBashIntegration = true;
+    enableZshIntegration = true;
     settings = {
       add_newline = false;
       command_timeout = 1200;
 
-      format = "$directory$git_branch$git_status$cmd_duration$line_break$character";
+      format = "[](fg:color_orange)$username[](fg:color_orange bg:color_yellow)$directory[](fg:color_yellow bg:color_aqua)$git_branch$git_status[](fg:color_aqua bg:color_bg3)$cmd_duration$time[](fg:color_bg3)$line_break$status$character";
+
+      palette = "gruvbox_dark";
+      palettes.gruvbox_dark = {
+        color_fg0 = "#fff4d8";
+        color_bg1 = "#2b0f14";
+        color_bg3 = "#4a1b22";
+        color_aqua = "#8f2d35";
+        color_orange = "#b92d1f";
+        color_red = "#ff4d4d";
+        color_yellow = "#d7b347";
+      };
+
+      username = {
+        show_always = true;
+        format = "[  ]($style)";
+        style_root = "bg:color_orange fg:color_red bold";
+        style_user = "bg:color_orange fg:color_fg0 bold";
+      };
 
       directory = {
-        truncation_length = 3;
+        truncation_length = 6;
         truncation_symbol = ".../";
-        style = "bold cyan";
+        format = "[ $path$read_only ]($style)";
+        style = "fg:color_bg1 bg:color_yellow bold";
+        read_only = "󰌾";
       };
 
       git_branch = {
-        format = " [$symbol$branch]($style)";
-        symbol = "git:";
-        style = "bold purple";
+        format = "[ $symbol$branch ]($style)";
+        symbol = " ";
+        style = "fg:color_fg0 bg:color_aqua bold";
       };
 
       git_status = {
-        format = "([$all_status$ahead_behind]($style))";
-        style = "bold yellow";
+        format = "[($all_status$ahead_behind )]($style)";
+        style = "fg:color_fg0 bg:color_aqua bold";
+        conflicted = "=\${count}";
+        ahead = "⇡\${count}";
+        behind = "⇣\${count}";
+        diverged = "⇕⇡\${ahead_count}⇣\${behind_count}";
+        untracked = "?\${count}";
+        stashed = "*\${count}";
+        modified = "!\${count}";
+        staged = "+\${count}";
+        renamed = "»\${count}";
+        deleted = "✘\${count}";
       };
 
       cmd_duration = {
-        min_time = 1500;
-        format = " [$duration]($style)";
-        style = "bold 208";
+        min_time = 1000;
+        format = "[ 󱎫 $duration ]($style)";
+        style = "fg:color_fg0 bg:color_bg3";
+      };
+
+      time = {
+        disabled = false;
+        time_format = "%H:%M";
+        format = "[  $time ]($style)";
+        style = "fg:color_yellow bg:color_bg3 bold";
+      };
+
+      status = {
+        disabled = false;
+        symbol = "✖ ";
+        success_symbol = "✔ ";
+        format = "[$symbol$status ]($style)";
+        style = "bold fg:color_red";
+        success_style = "bold fg:color_aqua";
       };
 
       character = {
-        success_symbol = "[>](bold green) ";
-        error_symbol = "[>](bold red) ";
+        success_symbol = "[](bold fg:color_aqua) ";
+        error_symbol = "[](bold fg:color_red) ";
       };
     };
+  };
+
+  programs.zsh = {
+    enable = true;
+    enableCompletion = true;
+    inherit shellAliases;
+
+    autosuggestion.enable = true;
+    syntaxHighlighting.enable = true;
+
+    oh-my-zsh = {
+      enable = true;
+      theme = "agnoster";
+      plugins = [ "git" "fzf" "zoxide" ];
+    };
+
+    initContent = ''
+      # Starship renders the prompt; Oh My Zsh provides plugin ergonomics.
+    '';
   };
 
   programs.bash = {
@@ -83,21 +149,13 @@ in
     enableCompletion = true;
     inherit shellAliases;
     initExtra = ''
-      # Tiny intro animation once per interactive shell, then clear it.
-      if [[ $- == *i* ]] && [[ -z "''${BASH_FANCY_INTRO_SHOWN:-}" ]]; then
-        export BASH_FANCY_INTRO_SHOWN=1
-        for frame in ".  " ".. " "..."; do
-          printf '\r\033[2mboot%s\033[0m' "$frame"
-          sleep 0.06
-        done
-        printf '\r\033[2K'
-      fi
+      # Nothing to see here
     '';
   };
 
   programs.atuin = {
-    enable = true;
-    enableBashIntegration = true;
+    enable = false;
+    enableBashIntegration = false;
     settings = {
       auto_sync = true;
       update_check = false;
@@ -108,11 +166,13 @@ in
   programs.zoxide = {
     enable = true;
     enableBashIntegration = true;
+    enableZshIntegration = true;
   };
 
   programs.fzf = {
     enable = true;
     enableBashIntegration = true;
+    enableZshIntegration = true;
   };
 
   programs.kitty = {
