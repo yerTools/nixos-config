@@ -67,8 +67,8 @@ let
   };
   
   shellAliases = {
-    rebuild-on-boot = "sudo nixos-rebuild build --flake ${config.home.homeDirectory}/nixos-config#${hostname}";
-    rebuild = "sudo nixos-rebuild switch --flake ${config.home.homeDirectory}/nixos-config#${hostname}";
+    rebuild = "sudo nixos-rebuild build --flake ${config.home.homeDirectory}/nixos-config#${hostname}";
+    rebuild-now = "sudo nixos-rebuild switch --flake ${config.home.homeDirectory}/nixos-config#${hostname}";
     update = "nix flake update --flake ${config.home.homeDirectory}/nixos-config";
     upgrade = "update && rebuild";
     autosync-status = "systemctl --user status nixos-auto-sync.timer nixos-auto-sync.service --no-pager -l";
