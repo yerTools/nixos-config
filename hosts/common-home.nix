@@ -415,6 +415,7 @@ in
     
     inputs.zen-browser.packages."${pkgs.stdenv.hostPlatform.system}".default
     google-chrome
+    kdePackages.kcalc
   ];
 
   systemd.user.services.nixos-auto-sync = lib.mkIf autoSyncConfig.enable {
