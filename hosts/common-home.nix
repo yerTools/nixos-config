@@ -1,6 +1,6 @@
 { config, pkgs, hostname, hostConfig, inputs, ... }:
 let
-  dotfiles = "${config.home.homeDirectory}/nixos-config/config";
+  dotfiles = "${config.home.homeDirectory}/nixos-config/dotfiles";
   createSymlink = path: config.lib.file.mkOutOfStoreSymlink path;
   treeSitterCli = pkgs.rustPlatform.buildRustPackage {
     pname = "tree-sitter";
