@@ -23,6 +23,11 @@
           user = "felix";
           userDescription = "Felix";
         };
+        "konnex-tv" = {
+          system = "x86_64-linux";
+          user = "konnex";
+          userDescription = "Konnex";
+        };
       };
     in {
       nixosConfigurations = builtins.mapAttrs (hostname: hostConfig: nixpkgs.lib.nixosSystem {
