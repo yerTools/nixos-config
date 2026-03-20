@@ -38,12 +38,6 @@ in
   home.username = hostConfig.user;
   home.homeDirectory = "/home/${hostConfig.user}";
 
-  programs.git = {
-    enable = true;
-    settings.user.name = "Felix Mayer";
-    settings.user.email = "FelixM@yer.tools";
-  };
-
   programs.starship = {
     enable = true;
     enableBashIntegration = true;

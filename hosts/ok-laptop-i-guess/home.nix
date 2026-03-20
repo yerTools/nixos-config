@@ -104,6 +104,12 @@ in
     };
   };
 
+  programs.git = {
+    enable = true;
+    settings.user.name = "Felix Mayer";
+    settings.user.email = "FelixM@yer.tools";
+  };
+
   home.stateVersion = "25.11";
   home.packages = with pkgs; [
     thunderbird
