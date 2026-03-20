@@ -47,6 +47,9 @@
     nerd-fonts.sauce-code-pro
     nerd-fonts.symbols-only
     nerd-fonts.jetbrains-mono
+    source-sans
+    source-serif
+    source-code-pro
   ];
 
   system.autoUpgrade = {
