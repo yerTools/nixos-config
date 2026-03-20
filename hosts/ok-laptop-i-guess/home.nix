@@ -108,5 +108,6 @@ in
   home.packages = with pkgs; [
     thunderbird
     vscode
+    steam
   ];
 }
