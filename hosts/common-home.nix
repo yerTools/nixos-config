@@ -1,7 +1,57 @@
-{ config, pkgs, hostname, hostConfig, inputs, ... }:
+{ config, pkgs, lib, hostname, hostConfig, inputs, ... }:
 let
   dotfiles = "${config.home.homeDirectory}/nixos-config/dotfiles";
   createSymlink = path: config.lib.file.mkOutOfStoreSymlink path;
+  autoSyncConfig = {
+    enable = true;
+    onCalendar = "hourly";
+    randomizedDelaySec = "10m";
+  };
+  nixosAutoSync = pkgs.writeShellApplication {
+    name = "nixos-auto-sync";
+    runtimeInputs = with pkgs; [ git util-linux coreutils ];
+    text = ''
+      set -eu
+
+      repo="${config.home.homeDirectory}/nixos-config"
+      log_dir="${config.home.homeDirectory}/.local/state/nixos-auto-sync"
+      lock_file="$log_dir/lock"
+
+      mkdir -p "$log_dir"
+
+      exec 9>"$lock_file"
+      if ! flock -n 9; then
+        exit 0
+      fi
+
+      cd "$repo" || exit 0
+      git rev-parse --is-inside-work-tree >/dev/null 2>&1 || exit 0
+
+      branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+      if [ -z "$branch" ]; then
+        exit 0
+      fi
+
+      if ! git fetch --quiet origin "$branch"; then
+        echo "[$(date -Is)] git fetch failed on branch $branch"
+        exit 0
+      fi
+
+      local_head="$(git rev-parse HEAD)"
+      remote_head="$(git rev-parse "origin/$branch")"
+
+      if [ "$local_head" = "$remote_head" ]; then
+        exit 0
+      fi
+
+      if ! git pull --ff-only --quiet origin "$branch"; then
+        echo "[$(date -Is)] git pull failed on branch $branch"
+        exit 0
+      fi
+
+      echo "[$(date -Is)] Pulled updates on branch $branch"
+    '';
+  };
   treeSitterCli = pkgs.rustPlatform.buildRustPackage {
     pname = "tree-sitter";
     version = "0.26.7";
@@ -17,9 +67,14 @@ let
   };
   
   shellAliases = {
+    rebuild-on-boot = "sudo nixos-rebuild build --flake ${config.home.homeDirectory}/nixos-config#${hostname}";
     rebuild = "sudo nixos-rebuild switch --flake ${config.home.homeDirectory}/nixos-config#${hostname}";
     update = "nix flake update --flake ${config.home.homeDirectory}/nixos-config";
     upgrade = "update && rebuild";
+    autosync-status = "systemctl --user status nixos-auto-sync.timer nixos-auto-sync.service --no-pager -l";
+    autosync-timers = "systemctl --user list-timers --all --no-pager | rg nixos-auto-sync";
+    autosync-log = "tail -n 120 ${config.home.homeDirectory}/.local/state/nixos-auto-sync.log";
+    autosync-run = "systemctl --user start nixos-auto-sync.service";
     neofetch = "fastfetch";
     ls = "eza --icons --group-directories-first";
     ll = "eza -lh --icons --git";
@@ -361,4 +416,36 @@ in
     inputs.zen-browser.packages."${pkgs.stdenv.hostPlatform.system}".default
     google-chrome
   ];
+
+  systemd.user.services.nixos-auto-sync = lib.mkIf autoSyncConfig.enable {
+    Unit = {
+      Description = "Sync nixos-config from Git";
+      After = [ "network-online.target" ];
+      Wants = [ "network-online.target" ];
+    };
+
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${nixosAutoSync}/bin/nixos-auto-sync";
+      StandardOutput = "append:%h/.local/state/nixos-auto-sync.log";
+      StandardError = "append:%h/.local/state/nixos-auto-sync.log";
+    };
+  };
+
+  systemd.user.timers.nixos-auto-sync = lib.mkIf autoSyncConfig.enable {
+    Unit = {
+      Description = "Run nixos-config sync periodically";
+    };
+
+    Timer = {
+      Unit = "nixos-auto-sync.service";
+      OnCalendar = autoSyncConfig.onCalendar;
+      RandomizedDelaySec = autoSyncConfig.randomizedDelaySec;
+      Persistent = true;
+    };
+
+    Install = {
+      WantedBy = [ "timers.target" ];
+    };
+  };
 }
