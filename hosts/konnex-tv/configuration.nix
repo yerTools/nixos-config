@@ -1,4 +1,97 @@
-{ config, pkgs, hostConfig, ... }:
+{ config, pkgs, lib, hostConfig, ... }:
+
+let
+  ramHomeEnabled = hostConfig.ramHome or false;
+  persistentRepoPath = hostConfig.persistentRepoPath or "/var/lib/${hostConfig.user}-config";
+  idleCleanupHours = hostConfig.idleCleanupHours or 0;
+  idleCleanupSeconds = idleCleanupHours * 3600;
+  cleanupUnitName = "${hostConfig.user}-idle-home-cleanup";
+  nightlyResetUnitName = "${hostConfig.user}-nightly-soft-reset";
+  nightlySoftResetTime = hostConfig.nightlySoftResetTime or "";
+  nightlySoftResetEnabled = ramHomeEnabled && nightlySoftResetTime != "";
+  cleanupProtectedPaths =
+    map (path: "/home/${hostConfig.user}/${path}")
+      (hostConfig.cleanupProtectedPaths or [ ]);
+  cleanupProtectedPathsShell = lib.concatMapStringsSep "\n" (path: "      \"${path}\"") cleanupProtectedPaths;
+  cleanupScript = ''
+    set -eu
+
+    user="${hostConfig.user}"
+    home_dir="/home/${hostConfig.user}"
+    keep_path="$home_dir/nixos-config"
+    threshold_seconds=${toString idleCleanupSeconds}
+    threshold_minutes=$((threshold_seconds / 60))
+    force_cleanup="''${CLEANUP_FORCE:-0}"
+    protected_paths=(
+      "$keep_path"
+${cleanupProtectedPathsShell}
+    )
+
+    is_protected_path() {
+      check_path="$1"
+      for protected in "''${protected_paths[@]}"; do
+        if [ "$check_path" = "$protected" ] || [[ "$check_path" == "$protected"/* ]]; then
+          return 0
+        fi
+      done
+      return 1
+    }
+
+    if [ "$force_cleanup" != "1" ]; then
+      session_id="$(${pkgs.systemd}/bin/loginctl list-sessions --no-legend | ${pkgs.gawk}/bin/awk -v u="$user" '$3 == u {print $1; exit}')"
+      if [ -z "$session_id" ]; then
+        exit 0
+      fi
+
+      idle_hint="$(${pkgs.systemd}/bin/loginctl show-session "$session_id" -p IdleHint --value)"
+      [ "$idle_hint" = "yes" ] || exit 0
+
+      idle_since="$(${pkgs.systemd}/bin/loginctl show-session "$session_id" -p IdleSinceHintMonotonic --value)"
+      [ "$idle_since" != "0" ] || exit 0
+
+      now_mono="$(${pkgs.gawk}/bin/awk '{ printf "%.0f", $1 * 1000000 }' /proc/uptime)"
+      idle_us=$((now_mono - idle_since))
+      required_us=$((threshold_seconds * 1000000))
+
+      [ "$idle_us" -ge "$required_us" ] || exit 0
+    fi
+
+    ${pkgs.systemd}/bin/loginctl terminate-user "$user" || true
+
+    if [ "$force_cleanup" = "1" ]; then
+      age_filter=()
+    else
+      age_filter=( -mmin "+$threshold_minutes" )
+    fi
+
+    while IFS= read -r -d $'\0' entry; do
+      if is_protected_path "$entry"; then
+        continue
+      fi
+
+      # Keep all symlinks so Home Manager managed links remain stable.
+      if [ -L "$entry" ] || [ -d "$entry" ]; then
+        continue
+      fi
+
+      rm -rf -- "$entry"
+    done < <(${pkgs.findutils}/bin/find "$home_dir" -mindepth 1 "''${age_filter[@]}" -print0)
+
+    while IFS= read -r -d $'\0' entry; do
+      if is_protected_path "$entry"; then
+        continue
+      fi
+
+      rmdir -- "$entry" 2>/dev/null || true
+    done < <(${pkgs.findutils}/bin/find "$home_dir" -mindepth 1 -depth -type d "''${age_filter[@]}" -print0)
+
+    if [ ! -e "$home_dir/nixos-config" ]; then
+      ln -s "${persistentRepoPath}" "$home_dir/nixos-config"
+    fi
+
+    chown -h "$user:users" "$home_dir/nixos-config" || true
+  '';
+in
 
 {
   imports =
@@ -31,6 +124,8 @@
 
   # Enable the KDE Plasma Desktop Environment.
   services.displayManager.sddm.enable = true;
+  services.displayManager.autoLogin.enable = true;
+  services.displayManager.autoLogin.user = hostConfig.user;
   services.desktopManager.plasma6.enable = true;
 
   # Configure keymap in X11
@@ -54,9 +149,13 @@
   services.libinput.enable = true;
   services.libinput.touchpad.naturalScrolling = true;
 
-  users.users.${hostConfig.user}.packages = with pkgs; [
-    kdePackages.kate
-  ];
+  users.users.${hostConfig.user} = {
+    packages = with pkgs; [
+      kdePackages.kate
+    ];
+  } // lib.optionalAttrs (hostConfig ? initialPassword) {
+    initialPassword = lib.mkDefault hostConfig.initialPassword;
+  };
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
@@ -64,8 +163,68 @@
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  networking.firewall.enable = false;
+  networking.firewall.enable = true;
+  networking.firewall.allowedTCPPorts = [ 22 ];
+
+  fileSystems."/home/${hostConfig.user}" = lib.mkIf ramHomeEnabled {
+    device = "tmpfs";
+    fsType = "tmpfs";
+    options = [
+      "mode=0700"
+      "nosuid"
+      "nodev"
+      "size=8G"
+    ];
+  };
+
+  systemd.tmpfiles.rules = lib.mkIf ramHomeEnabled [
+    "d ${persistentRepoPath} 0750 ${hostConfig.user} users -"
+    "d /home/${hostConfig.user} 0700 ${hostConfig.user} users -"
+    "L+ /home/${hostConfig.user}/nixos-config - - - - ${persistentRepoPath}"
+  ];
+
+  systemd.services.${cleanupUnitName} = lib.mkIf (ramHomeEnabled && idleCleanupHours > 0) {
+    description = "Cleanup stale files in RAM home after prolonged inactivity";
+    after = [ "multi-user.target" ];
+    path = with pkgs; [ coreutils findutils gawk systemd ];
+    serviceConfig = {
+      Type = "oneshot";
+    };
+    script = cleanupScript;
+  };
+
+  systemd.timers.${cleanupUnitName} = lib.mkIf (ramHomeEnabled && idleCleanupHours > 0) {
+    description = "Run RAM home cleanup check for public workstation";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnBootSec = "5m";
+      OnUnitActiveSec = "10m";
+      Unit = "${cleanupUnitName}.service";
+    };
+  };
+
+  systemd.services.${nightlyResetUnitName} = lib.mkIf nightlySoftResetEnabled {
+    description = "Nightly soft reset of public workstation user session";
+    after = [ "multi-user.target" ];
+    path = with pkgs; [ coreutils findutils gawk systemd ];
+    environment = {
+      CLEANUP_FORCE = "1";
+    };
+    serviceConfig = {
+      Type = "oneshot";
+    };
+    script = cleanupScript;
+  };
+
+  systemd.timers.${nightlyResetUnitName} = lib.mkIf nightlySoftResetEnabled {
+    description = "Run nightly soft reset for public workstation";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = nightlySoftResetTime;
+      Persistent = true;
+      Unit = "${nightlyResetUnitName}.service";
+    };
+  };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions

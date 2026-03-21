@@ -85,6 +85,13 @@ in
       plasmaparc.General = {
         RaiseMaximumVolume = true;
       };
+      kwalletrc.Wallet = {
+        Enabled = false;
+        FirstUse = false;
+      };
+      kwalletrc."org.freedesktop.secrets" = {
+        apiEnabled = false;
+      };
     };
   };
 

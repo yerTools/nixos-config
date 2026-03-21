@@ -27,6 +27,16 @@
           system = "x86_64-linux";
           user = "konnex";
           userDescription = "Konnex";
+          initialPassword = "Konnex";
+          ramHome = true;
+          persistentRepoPath = "/var/lib/konnex-config";
+          idleCleanupHours = 6;
+          nightlySoftResetTime = "*-*-* 05:00:00";
+          cleanupProtectedPaths = [
+            ".tmux.conf"
+            ".vim"
+            ".config/nvim"
+          ];
         };
       };
     in {

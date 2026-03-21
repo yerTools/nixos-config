@@ -1,6 +1,18 @@
 { config, pkgs, lib, hostname, hostConfig, inputs, ... }:
 let
-  dotfiles = "${config.home.homeDirectory}/nixos-config/dotfiles";
+  ramHomeEnabled = hostConfig.ramHome or false;
+  idleCleanupHours = hostConfig.idleCleanupHours or 0;
+  cleanupEnabled = ramHomeEnabled && idleCleanupHours > 0;
+  cleanupUnitName = "${hostConfig.user}-idle-home-cleanup";
+  nightlySoftResetTime = hostConfig.nightlySoftResetTime or "";
+  nightlySoftResetEnabled = ramHomeEnabled && nightlySoftResetTime != "";
+  nightlyResetUnitName = "${hostConfig.user}-nightly-soft-reset";
+  nixosConfigPath =
+    if ramHomeEnabled then
+      (hostConfig.persistentRepoPath or "${config.home.homeDirectory}/nixos-config")
+    else
+      "${config.home.homeDirectory}/nixos-config";
+  dotfiles = "${nixosConfigPath}/dotfiles";
   createSymlink = path: config.lib.file.mkOutOfStoreSymlink path;
   autoSyncConfig = {
     enable = true;
@@ -13,7 +25,7 @@ let
     text = ''
       set -eu
 
-      repo="${config.home.homeDirectory}/nixos-config"
+      repo="${nixosConfigPath}"
       log_dir="${config.home.homeDirectory}/.local/state/nixos-auto-sync"
       lock_file="$log_dir/lock"
 
@@ -67,9 +79,9 @@ let
   };
   
   shellAliases = {
-    rebuild = "sudo nixos-rebuild build --flake ${config.home.homeDirectory}/nixos-config#${hostname}";
-    rebuild-now = "sudo nixos-rebuild switch --flake ${config.home.homeDirectory}/nixos-config#${hostname}";
-    update = "nix flake update --flake ${config.home.homeDirectory}/nixos-config";
+    rebuild = "sudo nixos-rebuild build --flake ${nixosConfigPath}#${hostname}";
+    rebuild-now = "sudo nixos-rebuild switch --flake ${nixosConfigPath}#${hostname}";
+    update = "nix flake update --flake ${nixosConfigPath}";
     upgrade = "update && rebuild";
     autosync-status = "systemctl --user status nixos-auto-sync.timer nixos-auto-sync.service --no-pager -l";
     autosync-timers = "systemctl --user list-timers --all --no-pager | rg nixos-auto-sync";
@@ -81,6 +93,12 @@ let
     la = "eza -lah --icons --git";
     lt = "eza --tree --level=2 --icons";
     cat = "bat --style=plain";
+  } // lib.optionalAttrs cleanupEnabled {
+    cleanup = "sudo systemctl start ${cleanupUnitName}.service";
+    cleanup-status = "systemctl status ${cleanupUnitName}.service ${cleanupUnitName}.timer --no-pager -l";
+  } // lib.optionalAttrs nightlySoftResetEnabled {
+    nightly-reset = "sudo systemctl start ${nightlyResetUnitName}.service";
+    nightly-reset-status = "systemctl status ${nightlyResetUnitName}.service ${nightlyResetUnitName}.timer --no-pager -l";
   };
 
   configLinks = {
