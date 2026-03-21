@@ -79,8 +79,6 @@ let
   };
   
   shellAliases = {
-    rebuild = "sudo nixos-rebuild build --flake ${nixosConfigPath}#${hostname}";
-    rebuild-now = "sudo nixos-rebuild switch --flake ${nixosConfigPath}#${hostname}";
     update = "nix flake update --flake ${nixosConfigPath}";
     upgrade = "update && rebuild";
     autosync-status = "systemctl --user status nixos-auto-sync.timer nixos-auto-sync.service --no-pager -l";
@@ -233,6 +231,94 @@ in
       zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
       zstyle ':completion:*' menu select
 
+      rebuild() {
+        local usage action target input
+        usage='Usage: rebuild [now] [{path to NixOS config}/{hostname}/{path#hostname}]'
+        action='build'
+        target='${nixosConfigPath}#${hostname}'
+        input=""
+
+        if [ "$#" -gt 2 ]; then
+          echo "$usage" >&2
+          return 2
+        fi
+
+        if [ "$#" -eq 1 ]; then
+          if [ "$1" = 'now' ]; then
+            action='switch'
+          else
+            input="$1"
+          fi
+        elif [ "$#" -eq 2 ]; then
+          if [ "$1" != 'now' ]; then
+            echo "$usage" >&2
+            return 2
+          fi
+          action='switch'
+          input="$2"
+        fi
+
+        if [ -n "$input" ]; then
+          case "$input" in
+            *#*)
+              target="$input"
+              ;;
+            *)
+              if [ -d "$input" ]; then
+                target="$input#${hostname}"
+              else
+                case "$input" in
+                  */*|*[!A-Za-z0-9._-]*)
+                    target="$input#${hostname}"
+                    ;;
+                  *)
+                    target='${nixosConfigPath}'"#$input"
+                    ;;
+                esac
+              fi
+              ;;
+          esac
+        fi
+
+        sudo nixos-rebuild "$action" --flake "$target"
+      }
+
+      _rebuild_target_values() {
+        local -a hosts
+        local hosts_dir='${nixosConfigPath}/hosts'
+        local expl ret=1
+
+        if [ -d "$hosts_dir" ]; then
+          hosts=("$hosts_dir"/*(/N:t))
+        else
+          hosts=()
+        fi
+
+        if [ "$#hosts" -gt 0 ]; then
+          _wanted hosts expl 'hostname' compadd -a hosts && ret=0
+        fi
+
+        _wanted files expl 'path' _files && ret=0
+        return "$ret"
+      }
+
+      _rebuild_completion() {
+        if [ "$CURRENT" -eq 2 ]; then
+          compadd -- now
+          _rebuild_target_values
+          return
+        fi
+
+        if [ "$CURRENT" -eq 3 ] && [ "$words[2]" = 'now' ]; then
+          _rebuild_target_values
+          return
+        fi
+
+        _message 'Usage: rebuild [now] [{path}/{hostname}/{path#hostname}]'
+      }
+
+      compdef _rebuild_completion rebuild
+
       # Prefix-aware history search: type a prefix, then use arrow keys.
       autoload -U up-line-or-beginning-search down-line-or-beginning-search
       zle -N up-line-or-beginning-search
@@ -249,7 +335,57 @@ in
     enableCompletion = true;
     inherit shellAliases;
     initExtra = ''
-      # Nothing to see here
+      rebuild() {
+        local usage action target input
+        usage='Usage: rebuild [now] [{path to NixOS config}/{hostname}/{path#hostname}]'
+        action='build'
+        target='${nixosConfigPath}#${hostname}'
+        input=""
+
+        if [ "$#" -gt 2 ]; then
+          echo "$usage" >&2
+          return 2
+        fi
+
+        if [ "$#" -eq 1 ]; then
+          if [ "$1" = 'now' ]; then
+            action='switch'
+          else
+            input="$1"
+          fi
+        elif [ "$#" -eq 2 ]; then
+          if [ "$1" != 'now' ]; then
+            echo "$usage" >&2
+            return 2
+          fi
+          action='switch'
+          input="$2"
+        fi
+
+        if [ -n "$input" ]; then
+          case "$input" in
+            *#*)
+              target="$input"
+              ;;
+            *)
+              if [ -d "$input" ]; then
+                target="$input#${hostname}"
+              else
+                case "$input" in
+                  */*|*[!A-Za-z0-9._-]*)
+                    target="$input#${hostname}"
+                    ;;
+                  *)
+                    target='${nixosConfigPath}'"#$input"
+                    ;;
+                esac
+              fi
+              ;;
+          esac
+        fi
+
+        sudo nixos-rebuild "$action" --flake "$target"
+      }
     '';
   };
 
