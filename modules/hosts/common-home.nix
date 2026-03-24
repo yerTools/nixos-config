@@ -177,11 +177,24 @@ in
       zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
       zstyle ':completion:*' menu select
 
+      _rebuild_current_host() {
+        local detected
+        detected="$(${pkgs.systemd}/bin/hostnamectl --static 2>/dev/null || true)"
+        if [ -z "$detected" ]; then
+          detected="$(cat /proc/sys/kernel/hostname 2>/dev/null || true)"
+        fi
+        if [ -z "$detected" ]; then
+          detected='${hostname}'
+        fi
+        printf '%s\n' "$detected"
+      }
+
       rebuild() {
-        local usage action target input
+        local usage action target input current_host
         usage='Usage: rebuild [now] [{path to NixOS config}/{hostname}/{path#hostname}]'
         action='build'
-        target='${nixosConfigPath}#${hostname}'
+        current_host="$(_rebuild_current_host)"
+        target='${nixosConfigPath}'"#$current_host"
         input=""
 
         if [ "$#" -gt 2 ]; then
@@ -211,11 +224,11 @@ in
               ;;
             *)
               if [ -d "$input" ]; then
-                target="$input#${hostname}"
+                target="$input#$current_host"
               else
                 case "$input" in
                   */*|*[!A-Za-z0-9._-]*)
-                    target="$input#${hostname}"
+                    target="$input#$current_host"
                     ;;
                   *)
                     target='${nixosConfigPath}'"#$input"
@@ -231,7 +244,7 @@ in
 
       _rebuild_target_values() {
         local -a hosts
-        local hosts_dir='${nixosConfigPath}/hosts'
+        local hosts_dir='${nixosConfigPath}/modules/hosts'
         local expl ret=1
 
         if [ -d "$hosts_dir" ]; then
@@ -281,11 +294,24 @@ in
     enableCompletion = true;
     inherit shellAliases;
     initExtra = ''
+      _rebuild_current_host() {
+        local detected
+        detected="$(${pkgs.systemd}/bin/hostnamectl --static 2>/dev/null || true)"
+        if [ -z "$detected" ]; then
+          detected="$(cat /proc/sys/kernel/hostname 2>/dev/null || true)"
+        fi
+        if [ -z "$detected" ]; then
+          detected='${hostname}'
+        fi
+        printf '%s\n' "$detected"
+      }
+
       rebuild() {
-        local usage action target input
+        local usage action target input current_host
         usage='Usage: rebuild [now] [{path to NixOS config}/{hostname}/{path#hostname}]'
         action='build'
-        target='${nixosConfigPath}#${hostname}'
+        current_host="$(_rebuild_current_host)"
+        target='${nixosConfigPath}'"#$current_host"
         input=""
 
         if [ "$#" -gt 2 ]; then
@@ -315,11 +341,11 @@ in
               ;;
             *)
               if [ -d "$input" ]; then
-                target="$input#${hostname}"
+                target="$input#$current_host"
               else
                 case "$input" in
                   */*|*[!A-Za-z0-9._-]*)
-                    target="$input#${hostname}"
+                    target="$input#$current_host"
                     ;;
                   *)
                     target='${nixosConfigPath}'"#$input"

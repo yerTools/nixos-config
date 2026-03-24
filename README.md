@@ -4,7 +4,24 @@ Meine modulare Flake-basierte NixOS- und Home-Manager-Konfiguration.
 
 ## Struktur
 - **`common-*.nix`**: Globale Settings und Tools für **alle** Systeme (Terminal-Basics, Aliase, Netzwerkeinstellungen).
-- **`hosts/<hostname>/`**: Lokale Konfigurationen (Hardware, Desktop-Environment, `stateVersion`).
+- **`modules/hosts/<hostname>/`**: Lokale Konfigurationen (Hardware, Desktop-Environment, `stateVersion`).
+- **`modules/hosts/default.nix`**: Zentrale Host-Metadaten und Exporte für `nixosConfigurations` und `homeConfigurations`.
+
+## Import-Strategie (Hybrid)
+- **`import-tree`** wird nur für **`modules/features/`** genutzt.
+- **Hosts** bleiben bewusst **explizit** über `modules/hosts/default.nix` eingebunden.
+
+Warum:
+- In `modules/hosts/` liegen gemischte Dateitypen (flake-parts-Module, normale NixOS-Module, Hardware-Dateien).
+- Ein breites Auto-Import über den kompletten `modules/`-Baum kann dadurch unerwartete Evaluation-Probleme verursachen.
+- Der Hybrid-Ansatz hält Feature-Module bequem auto-discovered und Host-Module stabil/transparent.
+
+## Wo ändere ich was?
+- **Neuen Host anlegen**: `modules/hosts/<hostname>/` + Eintrag in `modules/hosts/default.nix`.
+- **Host-spezifische Systemoptionen**: `modules/hosts/<hostname>/configuration.nix`.
+- **Host-spezifische Home-Optionen**: `modules/hosts/<hostname>/home.nix`.
+- **Globale Defaults (alle Hosts)**: `modules/hosts/common-configuration.nix` und `modules/hosts/common-home.nix`.
+- **Neue Feature-Module (auto-discovered)**: `modules/features/*.nix`.
 
 ---
 
@@ -20,12 +37,12 @@ Egal ob Neuinstallation oder Backup-Restore – der Ablauf für ein neues Gerät
 2. **Host-Ordner anlegen & Hardware-Scan kopieren**
    NixOS generiert bei der Installation eine `/etc/nixos/hardware-configuration.nix`. Diese enthält z.B. Festplatten-UUIDs und MUSS in den neuen Ordner. Da sie root gehört, müssen die Rechte angepasst werden:
    ```bash
-   mkdir -p hosts/neuer-pc
-   sudo cp /etc/nixos/hardware-configuration.nix hosts/neuer-pc/
-   sudo chown $USER:users hosts/neuer-pc/hardware-configuration.nix
+   mkdir -p modules/hosts/neuer-pc
+   sudo cp /etc/nixos/hardware-configuration.nix modules/hosts/neuer-pc/
+   sudo chown $USER:users modules/hosts/neuer-pc/hardware-configuration.nix
    ```
 
-3. **Host-Configs anlegen (`hosts/neuer-pc/`)**
+3. **Host-Configs anlegen (`modules/hosts/neuer-pc/`)**
    
    **`configuration.nix`** (System)
    ```nix
@@ -44,7 +61,7 @@ Egal ob Neuinstallation oder Backup-Restore – der Ablauf für ein neues Gerät
    ```
 
 4. **Flake-Eintrag hinzufügen**
-   In der `flake.nix` im Root-Verzeichnis den neuen Host ergänzen:
+   In `modules/hosts/default.nix` im `hosts`-Attrset den neuen Host ergänzen:
    ```nix
    hosts = {
      "neuer-pc" = { system = "x86_64-linux"; user = "felix"; description = "Mein neuer PC"; };
@@ -56,6 +73,17 @@ Egal ob Neuinstallation oder Backup-Restore – der Ablauf für ein neues Gerät
    sudo nixos-rebuild switch --flake .#neuer-pc
    ```
    *(Danach kannst du deine selbst definierten Aliase wie `rebuild` nutzen.)*
+
+   Mit dem Shell-Helper geht es ohne expliziten Hostnamen:
+   ```bash
+   rebuild now
+   ```
+   Dabei wird automatisch der aktuelle Hostname als Flake-Target verwendet.
+
+   Optional Home-Manager standalone:
+   ```bash
+   home-manager switch --flake .#felix@neuer-pc
+   ```
 
 ---
 
