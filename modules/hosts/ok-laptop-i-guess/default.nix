@@ -1,3 +1,7 @@
+# TODO:
+#   Show hidden files
+#   GitHub SSH Config (~/.ssh/config)
+
 { self, inputs, ... }:
 let
   hostConfig = {

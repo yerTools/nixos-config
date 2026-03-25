@@ -38,6 +38,13 @@ Mit dem Befehl `nix run github:vimjoyer/nixconf#niri` kann das Setup von Vimjoye
 
 Alle Nix Wrapper Modules sind hier aufgelistet: https://birdeehub.github.io/nix-wrapper-modules/md/intro.html
 
+## TODOs:
+
+Überprüfen, ob http(s) gesetzt ist und falls ja, automatisch durch ssh ersetzen, aber nur für dieses Repo
+```
+git remote set-url origin git@github.com:yerTools/nixos-config.git
+```
+
 ---
 
 # Felix NixOS Config
