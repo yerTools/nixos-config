@@ -3,6 +3,7 @@
   flake.nixosModules.hosts-common-configuration = { config, pkgs, lib, hostConfig, ... }: {
     networking.hostName = hostConfig.hostname;
 
+    boot.loader.timeout = lib.mkDefault 3;
     boot.loader.systemd-boot.enable = true;
     boot.loader.efi.canTouchEfiVariables = true;
     boot.kernelPackages = pkgs.linuxPackages_latest;

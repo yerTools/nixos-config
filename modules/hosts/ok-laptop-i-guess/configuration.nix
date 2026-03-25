@@ -9,6 +9,8 @@
     networking.wireless.enable = true;
     networking.firewall.enable = true;
 
+    boot.loader.timeout = 1;
+
     # Keep data-at-rest guarantees strong by preventing suspend/hibernate states.
     systemd.sleep.settings.Sleep = {
       AllowSuspend = "no";
