@@ -28,7 +28,7 @@ in
     programs.plasma = {
       enable = true;
       workspace = {
-        wallpaper = "${self}/assets/images/wallpapers/firewatch-sunset.jpg}";
+        wallpaper = "${self}/assets/images/wallpapers/firewatch-sunset.jpg";
         theme = "breeze-dark";
         colorScheme = "BreezeDark";
         splashScreen.theme = "None";
