@@ -1,6 +1,16 @@
 { self, inputs, ... }: {
   
-  flake.nixosModules.hosts-common-configuration = { config, pkgs, lib, hostConfig, ... }: {
+  flake.nixosModules.hosts-common-configuration = { config, pkgs, lib, hostConfig, ... }:
+  
+  let
+    ramHomeEnabled = hostConfig.ramHome or false;
+    nixosConfigPath =
+      if ramHomeEnabled then
+        (hostConfig.persistentRepoPath or "/home/${hostConfig.user.name}/nixos-config")
+      else
+        "/home/${hostConfig.user.name}/nixos-config";
+  in
+  {
     networking.hostName = hostConfig.hostname;
 
     boot.loader.timeout = lib.mkDefault 3;
@@ -56,6 +66,7 @@
     system.autoUpgrade = {
       enable = true;
       allowReboot = false;
+      flake = "${nixosConfigPath}#${hostConfig.hostname}";
     };
 
     nixpkgs.config.allowUnfree = true;
