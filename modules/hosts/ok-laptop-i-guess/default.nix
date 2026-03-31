@@ -34,6 +34,7 @@ in
           users.${hostConfig.user.name} = {
             imports = [
               self.homeModules.host-ok-laptop-i-guess-home
+              self.homeModules.apps-launcher-walker
             ];
           };
         };
