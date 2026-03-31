@@ -40,6 +40,7 @@ in
           users.${hostConfig.user.name} = {
             imports = [
               self.homeModules.host-konnex-tv-home
+              self.homeModules.apps-terminal-kitty
             ];
           };
         };

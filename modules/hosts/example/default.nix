@@ -30,6 +30,7 @@ in
           users.${hostConfig.user.name} = {
             imports = [
               self.homeModules.host-example-host-home
+              self.homeModules.apps-terminal-kitty
             ];
           };
         };
