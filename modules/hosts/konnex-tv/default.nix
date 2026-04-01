@@ -25,7 +25,7 @@ in
     };
     modules = [
       inputs.home-manager.nixosModules.home-manager
-      self.nixosModules.hosts-common-configuration # Add the common configuration for all machines.
+      self.nixosModules.hosts-common-configuration
 
       {
         home-manager = {
@@ -35,7 +35,7 @@ in
             self.homeModules.hosts-common-home
           ];
           extraSpecialArgs = {
-            inherit hostConfig inputs;
+            inherit hostConfig inputs self;
           };
           users.${hostConfig.user.name} = {
             imports = [
@@ -46,7 +46,7 @@ in
         };
       }
       
-      self.nixosModules.host-konnex-tv-configuration # Add our machine configuration by module name, not by path.
+      self.nixosModules.host-konnex-tv-configuration
      ];
   };
 

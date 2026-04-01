@@ -1,4 +1,4 @@
-{ self, inputs, ... }: {
+{ ... }: {
   
   flake.nixosModules.hosts-common-configuration = { config, pkgs, lib, hostConfig, ... }:
   

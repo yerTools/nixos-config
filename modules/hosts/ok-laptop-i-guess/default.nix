@@ -29,7 +29,7 @@ in
             self.homeModules.hosts-common-home
           ];
           extraSpecialArgs = {
-            inherit hostConfig inputs;
+            inherit hostConfig inputs self;
           };
           users.${hostConfig.user.name} = {
             imports = [

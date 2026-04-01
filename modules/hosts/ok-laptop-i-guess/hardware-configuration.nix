@@ -1,4 +1,4 @@
-{ self, inputs, ... }: {
+{ ... }: {
 
   flake.nixosModules.host-ok-laptop-i-guess-hardware = { config, lib, pkgs, modulesPath, ... }: {
     imports =

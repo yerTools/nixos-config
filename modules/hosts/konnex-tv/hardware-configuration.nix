@@ -1,4 +1,4 @@
-{ self, inputs, ... }: {
+{ ... }: {
 
   flake.nixosModules.host-konnex-tv-hardware = { config, lib, pkgs, modulesPath, ... }: {
     # Copy the entire content from `/etc/nixos/hardware-configuration.nix` inside.

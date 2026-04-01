@@ -1,7 +1,7 @@
-{ self, inputs, ... }: {
+{ ... }: {
 
   flake.nixosModules.host-example-host-hardware = { config, lib, pkgs, modulesPath, ... }: {
-    # Copy the entire content from `/etc/nixos/hardware-configuration.nix` inside.
+    # Replace this file content with the generated /etc/nixos/hardware-configuration.nix.
 
     imports = [
       (modulesPath + "/installer/scan/not-detected.nix")
