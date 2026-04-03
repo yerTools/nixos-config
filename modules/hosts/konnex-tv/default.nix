@@ -10,7 +10,7 @@ let
     ramHome = true;
     persistentRepoPath = "/var/lib/konnex-config";
     idleCleanupHours = 6;
-    nightlySoftResetTime = "*-*-* 05:00:00";
+    nightlySoftResetTime = "";
     cleanupProtectedPaths = [
       ".tmux.conf"
       ".vim"

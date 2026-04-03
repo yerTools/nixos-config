@@ -58,8 +58,6 @@ ${cleanupProtectedPathsShell}
         [ "$idle_us" -ge "$required_us" ] || exit 0
       fi
 
-      ${pkgs.systemd}/bin/loginctl terminate-user "$user" || true
-
       if [ "$force_cleanup" = "1" ]; then
         age_filter=()
       else
@@ -129,6 +127,14 @@ ${cleanupProtectedPathsShell}
     services.displayManager.autoLogin.user = hostConfig.user.name;
     services.desktopManager.plasma6.enable = true;
 
+    # Keep this public device in an always-on state.
+    systemd.sleep.settings.Sleep = {
+      AllowSuspend = "no";
+      AllowHibernation = "no";
+      AllowHybridSleep = "no";
+      AllowSuspendThenHibernate = "no";
+    };
+
     # Configure keymap in X11
     services.xserver.xkb = {
       layout = "de";
@@ -160,6 +166,11 @@ ${cleanupProtectedPathsShell}
 
     # Enable the OpenSSH daemon.
     services.openssh.enable = true;
+
+    # Avoid persisting user activity traces to SSD where possible.
+    services.journald.storage = "volatile";
+    boot.tmp.useTmpfs = true;
+    boot.tmp.cleanOnBoot = true;
 
     # Open ports in the firewall.
     # networking.firewall.allowedTCPPorts = [ ... ];
