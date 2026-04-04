@@ -8,6 +8,7 @@
     import-tree.url = "github:vic/import-tree";
 
     wrapper-modules.url = "github:BirdeeHub/nix-wrapper-modules";
+    nix-appimage.url = "github:ralismark/nix-appimage";
   
     home-manager = {
       url = "github:nix-community/home-manager/master";

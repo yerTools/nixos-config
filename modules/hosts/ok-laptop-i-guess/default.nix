@@ -36,6 +36,7 @@ in
               self.homeModules.host-ok-laptop-i-guess-home
               self.homeModules.apps-terminal-kitty
               self.homeModules.apps-launcher-walker
+              self.homeModules.games-retro-retroarch
             ];
           };
         };

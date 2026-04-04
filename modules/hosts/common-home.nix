@@ -145,6 +145,7 @@
     programs.zsh = {
       enable = true;
       enableCompletion = true;
+      dotDir = config.home.homeDirectory;
       inherit shellAliases;
 
       history = {
@@ -402,9 +403,9 @@
       stylua
       marksman
       eslint_d
-      nodePackages.prettier
-      nodePackages.vscode-langservers-extracted
-      nodePackages.typescript
+      prettier
+      vscode-langservers-extracted
+      typescript
 
       bat
       wget
