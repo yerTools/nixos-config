@@ -112,3 +112,25 @@ Egal ob Neuinstallation oder Backup-Restore – der Ablauf für ein neues Gerät
 
 - **`stateVersion`:** Dies ist **nicht** die NixOS-Version! Es ist ein Kompatibilitäts-Stempel der Erstinstallation. **Einmalig festlegen und danach für die Lebenszeit des Geräts niemals mehr anfassen!** Für `home.nix` nimmst du einfach die Versionsnummer des aktuellen NixOS-Releases zum Zeitpunkt der Installation (z.B. "25.11" oder "24.05").
 - **Updates (Flake Inputs):** Die echten Paket-Updates werden global über die `flake.nix` gesteuert (z.B. über `nixos-unstable`). Updates ziehst du einfach für alle Hosts via `nix flake update` (oder dem Alias `upgrade`).
+
+## Eigene Scripts in PATH
+
+Eigene Bash-Scripts liegen in `modules/scripts/` und werden ueber das Home-Modul `self.homeModules.scripts-local` als Commands in den PATH gebaut.
+
+Beispiel fuer einen Host in `modules/hosts/<host>/home.nix`:
+
+```nix
+imports = [
+   self.homeModules.scripts-local
+];
+
+localScripts.paths = [
+   "modules/scripts/utilities/ssh-config"
+];
+```
+
+Danach aktivieren:
+
+```bash
+sudo nixos-rebuild switch --flake .#<host>
+```

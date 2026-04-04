@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+# Breche bei Fehlern ab
+set -e
+
+SSH_DIR="$HOME/.ssh"
+CONFIG_FILE="$SSH_DIR/config"
+
+# Suche nach .pub Dateien (ohne Fehler, wenn das Verzeichnis leer ist)
+shopt -s nullglob
+PUB_KEYS=("$SSH_DIR"/*.pub)
+shopt -u nullglob
+
+if [[ ${#PUB_KEYS[@]} -eq 0 ]]; then
+    echo "Fehler: Keine öffentlichen Schlüssel (*.pub) in $SSH_DIR gefunden." >&2
+    exit 1
+fi
+
+echo "Wähle einen Schlüssel aus:"
+PS3="Nummer eingeben: "
+select PUB_KEY in "${PUB_KEYS[@]}"; do
+    if [[ -n "$PUB_KEY" ]]; then
+        # Absoluter Pfad zum Private Key (ohne .pub Endung)
+        PRIV_KEY="${PUB_KEY%.pub}"
+        break
+    else
+        echo "Ungültige Eingabe."
+    fi
+done
+
+read -r -p "Host-Alias (Name für den Aufruf, z.B. 'Konnex'): " HOST_ALIAS
+read -r -p "Host-IP/Domain (z.B. 172.21.1.161 oder konnex.tv): " HOST_NAME
+read -r -p "Username: " SSH_USER
+read -r -p "Port [22]: " SSH_PORT
+SSH_PORT=${SSH_PORT:-22}
+
+# Config anlegen und Rechte absichern
+mkdir -p "$SSH_DIR"
+touch "$CONFIG_FILE"
+chmod 600 "$CONFIG_FILE"
+
+# Prüfe und entferne existierenden Eintrag, um Reibungsverluste durch manuelle Löschung zu vermeiden
+if grep -q "^Host[[:space:]]\+$HOST_ALIAS\b" "$CONFIG_FILE"; then
+    echo "Existierender Eintrag für '$HOST_ALIAS' gefunden. Wird überschrieben..."
+    TEMP_CONF=$(mktemp)
+    awk -v target="$HOST_ALIAS" '
+    /^Host[ \t]+/ {
+        skip = 0
+        for(i=2; i<=NF; i++) {
+            if($i == target) { skip = 1; break; }
+        }
+    }
+    !skip { print $0 }
+    ' "$CONFIG_FILE" > "$TEMP_CONF"
+    cat "$TEMP_CONF" > "$CONFIG_FILE"
+    rm -f "$TEMP_CONF"
+fi
+
+# Eintrag in ~/.ssh/config schreiben
+{
+    echo ""
+    echo "Host $HOST_ALIAS"
+    echo "    HostName $HOST_NAME"
+    echo "    User $SSH_USER"
+    echo "    Port $SSH_PORT"
+    echo "    IdentityFile $PRIV_KEY"
+} >> "$CONFIG_FILE"
+
+echo "Eintrag in $CONFIG_FILE geschrieben."
+
+# Schlüssel kopieren
+echo "Kopiere Schlüssel... (Passwortabfrage des Hosts folgt)"
+ssh-copy-id -i "$PUB_KEY" -p "$SSH_PORT" "$SSH_USER@$HOST_NAME"
+
+echo "Fertig. Teste die Verbindung mit: ssh $HOST_ALIAS"

@@ -19,9 +19,10 @@ let
 in
 
 {
-  flake.homeModules.host-ok-laptop-i-guess-home = { inputs, pkgs, ... }: {
+  flake.homeModules.host-ok-laptop-i-guess-home = { inputs, pkgs, self, ... }: {
     imports = [
       inputs.plasma-manager.homeModules.plasma-manager
+      self.homeModules.scripts-local
     ];
 
     # https://nix-community.github.io/plasma-manager/options.xhtml
@@ -111,6 +112,11 @@ in
     };
 
     home.stateVersion = "25.11";
+
+    localScripts.paths = [
+      "modules/scripts/utilities/ssh-config"
+    ];
+
     home.packages = with pkgs; [
       thunderbird
       vscode
