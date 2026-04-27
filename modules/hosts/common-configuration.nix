@@ -74,6 +74,17 @@
 
     environment.systemPackages = with pkgs; [
       git
+      
+      p7zip
+      sqlitebrowser
+
+      f3
+      exfatprogs
+      kdePackages.kdesu
+      kdePackages.partitionmanager
+
+      smartmontools
+      gsmartcontrol
     ];
   };
 
