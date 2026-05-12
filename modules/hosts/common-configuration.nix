@@ -40,7 +40,7 @@
     users.users.${hostConfig.user.name} = {
       isNormalUser = true;
       description = hostConfig.user.description;
-      extraGroups = [ "networkmanager" "wheel" ];
+      extraGroups = [ "networkmanager" "wheel" "dialout" ];
     };
 
     programs.zsh.enable = true;

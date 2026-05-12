@@ -102,6 +102,39 @@
       kdePackages.kate
     ];
 
+    hardware.graphics.enable32Bit = true; 
+    programs.steam.enable = true;
+
+    programs.nix-ld.enable = true;
+    programs.nix-ld.libraries = with pkgs; [
+      SDL2
+      libsm
+      libice
+      libxcb
+
+      libxcb-wm
+      libxcb-util
+      libxcb-image
+      libxcb-cursor
+      libxcb-errors
+      libxcb-keysyms
+      libxcb-render-util
+      libxkbcommon
+      libGL
+      dbus
+
+      cmake
+
+      libsForQt5.qtbase
+      libsForQt5.qtquickcontrols2
+      libsForQt5.qtgamepad
+      libsForQt5.qtconnectivity
+      libsForQt5.qtpositioning
+      libsForQt5.qtserialport
+      libsForQt5.qtgraphicaleffects
+      libsForQt5.wrapQtAppsHook
+    ];
+
     # This value determines the NixOS release from which the default
     # settings for stateful data, like file locations and database versions
     # on your system were taken. It‘s perfectly fine and recommended to leave
