@@ -85,6 +85,11 @@
 
     services.printing.enable = true;
 
+    services.udev.packages = with pkgs; [
+      platformio-core.udev
+      openocd
+    ];
+
     services.pulseaudio.enable = false;
     security.rtkit.enable = true;
     services.pipewire = {

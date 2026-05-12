@@ -121,6 +121,7 @@ in
       thunderbird
       vscode
       steam
+      platformio
     ];
   };
 }
