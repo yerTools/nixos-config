@@ -25,6 +25,25 @@ in
       self.homeModules.scripts-local
     ];
 
+    systemd.user.services.bluetooth-ensure-on = {
+      Unit = {
+        Description = "Ensure Bluetooth is powered on after login";
+        PartOf = [ "graphical-session.target" ];
+        After = [ "graphical-session.target" ];
+      };
+
+      Service = {
+        Type = "oneshot";
+        ExecStart = ''
+          ${pkgs.runtimeShell} -lc "${pkgs.bluez}/bin/bluetoothctl power on"
+        '';
+      };
+
+      Install = {
+        WantedBy = [ "graphical-session.target" ];
+      };
+    };
+
     # https://nix-community.github.io/plasma-manager/options.xhtml
     programs.plasma = {
       enable = true;

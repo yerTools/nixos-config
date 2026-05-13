@@ -39,6 +39,20 @@
       };
     };
 
+    systemd.services.bluetooth-ensure-on = {
+      description = "Ensure Bluetooth is unblocked and powered on";
+      after = [ "bluetooth.service" ];
+      wants = [ "bluetooth.service" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = ''
+          ${pkgs.util-linux}/bin/rfkill unblock bluetooth
+          ${pkgs.bluez}/bin/bluetoothctl power on
+        '';
+      };
+    };
+
     # Enable the X11 windowing system.
     # You can disable this if you're only using the Wayland session.
     services.xserver.enable = true;
