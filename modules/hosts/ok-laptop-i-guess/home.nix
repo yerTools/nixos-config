@@ -122,6 +122,7 @@ in
       vscode
       steam
       platformio
+      gimp
     ];
   };
 }
