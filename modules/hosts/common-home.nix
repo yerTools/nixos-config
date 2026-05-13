@@ -181,7 +181,7 @@
 
         rebuild() {
           local usage action target input
-          usage='Usage: rebuild [now] [{path to NixOS config}/{hostname}/{path#hostname}]'
+          usage='Usage: rebuild [now|boot] [{path to NixOS config}/{hostname}/{path#hostname}]'
           action='build'
           target='${nixosConfigPath}#${hostConfig.hostname}'
           input=""
@@ -194,15 +194,20 @@
           if [ "$#" -eq 1 ]; then
             if [ "$1" = 'now' ]; then
               action='switch'
+            elif [ "$1" = 'boot' ]; then
+              action='boot'
             else
               input="$1"
             fi
           elif [ "$#" -eq 2 ]; then
-            if [ "$1" != 'now' ]; then
+            if [ "$1" = 'now' ]; then
+              action='switch'
+            elif [ "$1" = 'boot' ]; then
+              action='boot'
+            else
               echo "$usage" >&2
               return 2
             fi
-            action='switch'
             input="$2"
           fi
 
@@ -252,17 +257,17 @@
 
         _rebuild_completion() {
           if [ "$CURRENT" -eq 2 ]; then
-            compadd -- now
+            compadd -- now boot
             _rebuild_target_values
             return
           fi
 
-          if [ "$CURRENT" -eq 3 ] && [ "$words[2]" = 'now' ]; then
+          if [ "$CURRENT" -eq 3 ] && [ "$words[2]" = 'now' -o "$words[2]" = 'boot' ]; then
             _rebuild_target_values
             return
           fi
 
-          _message 'Usage: rebuild [now] [{path}/{hostname}/{path#hostname}]'
+          _message 'Usage: rebuild [now|boot] [{path}/{hostname}/{path#hostname}]'
         }
 
         compdef _rebuild_completion rebuild
@@ -285,7 +290,7 @@
       initExtra = ''
         rebuild() {
           local usage action target input
-          usage='Usage: rebuild [now] [{path to NixOS config}/{hostname}/{path#hostname}]'
+          usage='Usage: rebuild [now|boot] [{path to NixOS config}/{hostname}/{path#hostname}]'
           action='build'
           target='${nixosConfigPath}#${hostConfig.hostname}'
           input=""
@@ -298,15 +303,20 @@
           if [ "$#" -eq 1 ]; then
             if [ "$1" = 'now' ]; then
               action='switch'
+            elif [ "$1" = 'boot' ]; then
+              action='boot'
             else
               input="$1"
             fi
           elif [ "$#" -eq 2 ]; then
-            if [ "$1" != 'now' ]; then
+            if [ "$1" = 'now' ]; then
+              action='switch'
+            elif [ "$1" = 'boot' ]; then
+              action='boot'
+            else
               echo "$usage" >&2
               return 2
             fi
-            action='switch'
             input="$2"
           fi
 
