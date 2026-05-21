@@ -20,9 +20,11 @@
     };
 
     # Harden DMA behavior for external devices.
+    # Disabling auto-suspend for btusb prevents MediaTek MT7922 from crashing and hanging.
     boot.kernelParams = [
       "amd_iommu=on"
       "iommu.strict=1"
+      "btusb.enable_autosuspend=0"
     ];
 
     hardware.bluetooth = {
